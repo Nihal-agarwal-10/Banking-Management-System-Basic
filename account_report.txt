@@ -1,0 +1,10 @@
+========== BANK ACCOUNT REPORT ==========
+
+Account Number : 2109
+Account Holder : Nihal
+Balance        : 60000
+----------------------------------
+Account Number : 876
+Account Holder : njsls
+Balance        : 876
+----------------------------------

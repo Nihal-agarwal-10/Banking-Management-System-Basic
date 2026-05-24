@@ -35,6 +35,10 @@ The project was built to strengthen practical understanding of:
 - Menu-Driven Console Interface
 - Temporary File Replacement Technique
 - Structured OOP-based Code
+- Transaction History Logging
+- Search Account by Name
+- Export Account Report
+- Basic Exception Handling
 
 ---
 

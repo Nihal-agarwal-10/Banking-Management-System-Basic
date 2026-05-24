@@ -40,34 +40,67 @@ public:
         return false;
     }
 
-    void createAccount()
+    void logTransaction(string type, int accNo, float amount)
     {
-        cout << "Enter Account Number: ";
-        cin >> accountNumber;
+        ofstream file("transactions.txt", ios::app);
 
-        if (accountExists(accountNumber))
-        {
-            cout << "\nAccount Number Already Exists!" << endl;
-            return;
-        }
-
-        cin.ignore();
-
-        cout << "Enter Account Holder Name: ";
-        getline(cin, name);
-
-        cout << "Enter Initial Balance: ";
-        cin >> balance;
-
-        ofstream file("accounts.txt", ios::app);
-
-        file << accountNumber << endl;
-        file << name << endl;
-        file << balance << endl;
+        file << "Transaction Type : " << type << endl;
+        file << "Account Number   : " << accNo << endl;
+        file << "Amount           : " << amount << endl;
+        file << "----------------------------------" << endl;
 
         file.close();
+    }
 
-        cout << "\nAccount Created Successfully!" << endl;
+    void createAccount()
+    {
+        try
+        {
+            cout << "Enter Account Number: ";
+            cin >> accountNumber;
+
+            if (cin.fail())
+            {
+                throw "Invalid Account Number!";
+            }
+
+            if (accountExists(accountNumber))
+            {
+                cout << "\nAccount Number Already Exists!" << endl;
+                return;
+            }
+
+            cin.ignore();
+
+            cout << "Enter Account Holder Name: ";
+            getline(cin, name);
+
+            cout << "Enter Initial Balance: ";
+            cin >> balance;
+
+            if (balance < 0)
+            {
+                throw "Balance Cannot Be Negative!";
+            }
+
+            ofstream file("accounts.txt", ios::app);
+
+            file << accountNumber << endl;
+            file << name << endl;
+            file << balance << endl;
+
+            file.close();
+
+            cout << "\nAccount Created Successfully!" << endl;
+        }
+
+        catch (const char* error)
+        {
+            cout << "\nError: " << error << endl;
+
+            cin.clear();
+            cin.ignore(1000, '\n');
+        }
     }
 
     void displayAllAccounts()
@@ -98,7 +131,7 @@ public:
         file.close();
     }
 
-    void searchAccount()
+    void searchByAccountNumber()
     {
         int searchAccNo;
 
@@ -142,6 +175,53 @@ public:
         file.close();
     }
 
+    void searchByName()
+    {
+        string searchName;
+
+        cin.ignore();
+
+        cout << "Enter Account Holder Name: ";
+        getline(cin, searchName);
+
+        ifstream file("accounts.txt");
+
+        int accNo;
+        string accName;
+        float accBalance;
+
+        bool found = false;
+
+        while (file >> accNo)
+        {
+            file.ignore();
+
+            getline(file, accName);
+
+            file >> accBalance;
+
+            if (accName == searchName)
+            {
+                cout << "\n========== ACCOUNT FOUND ==========" << endl;
+
+                cout << "Account Number : " << accNo << endl;
+                cout << "Account Holder : " << accName << endl;
+                cout << "Balance        : " << accBalance << endl;
+
+                cout << "----------------------------------" << endl;
+
+                found = true;
+            }
+        }
+
+        if (!found)
+        {
+            cout << "\nNo Matching Account Found!" << endl;
+        }
+
+        file.close();
+    }
+
     void depositMoney()
     {
         int searchAccNo;
@@ -173,6 +253,8 @@ public:
             if (accNo == searchAccNo)
             {
                 accBalance += depositAmount;
+
+                logTransaction("DEPOSIT", accNo, depositAmount);
 
                 found = true;
 
@@ -230,6 +312,8 @@ public:
                 {
                     accBalance -= withdrawAmount;
 
+                    logTransaction("WITHDRAW", accNo, withdrawAmount);
+
                     cout << "\nWithdrawal Successful!" << endl;
                 }
                 else
@@ -257,21 +341,16 @@ public:
         }
     }
 
-    void updateAccount()
+    void exportAccountsReport()
     {
-        int searchAccNo;
-
-        cout << "Enter Account Number to Update: ";
-        cin >> searchAccNo;
-
         ifstream file("accounts.txt");
-        ofstream tempFile("temp.txt");
+        ofstream report("account_report.txt");
 
         int accNo;
         string accName;
         float accBalance;
 
-        bool found = false;
+        report << "========== BANK ACCOUNT REPORT ==========\n\n";
 
         while (file >> accNo)
         {
@@ -281,86 +360,17 @@ public:
 
             file >> accBalance;
 
-            if (accNo == searchAccNo)
-            {
-                found = true;
+            report << "Account Number : " << accNo << endl;
+            report << "Account Holder : " << accName << endl;
+            report << "Balance        : " << accBalance << endl;
 
-                cin.ignore();
-
-                cout << "\nEnter New Account Holder Name: ";
-                getline(cin, accName);
-
-                cout << "Enter New Balance: ";
-                cin >> accBalance;
-
-                cout << "\nAccount Updated Successfully!" << endl;
-            }
-
-            tempFile << accNo << endl;
-            tempFile << accName << endl;
-            tempFile << accBalance << endl;
+            report << "----------------------------------" << endl;
         }
 
         file.close();
-        tempFile.close();
+        report.close();
 
-        remove("accounts.txt");
-        rename("temp.txt", "accounts.txt");
-
-        if (!found)
-        {
-            cout << "\nAccount Not Found!" << endl;
-        }
-    }
-
-    void deleteAccount()
-    {
-        int searchAccNo;
-
-        cout << "Enter Account Number to Delete: ";
-        cin >> searchAccNo;
-
-        ifstream file("accounts.txt");
-        ofstream tempFile("temp.txt");
-
-        int accNo;
-        string accName;
-        float accBalance;
-
-        bool found = false;
-
-        while (file >> accNo)
-        {
-            file.ignore();
-
-            getline(file, accName);
-
-            file >> accBalance;
-
-            if (accNo == searchAccNo)
-            {
-                found = true;
-
-                cout << "\nAccount Deleted Successfully!" << endl;
-
-                continue;
-            }
-
-            tempFile << accNo << endl;
-            tempFile << accName << endl;
-            tempFile << accBalance << endl;
-        }
-
-        file.close();
-        tempFile.close();
-
-        remove("accounts.txt");
-        rename("temp.txt", "accounts.txt");
-
-        if (!found)
-        {
-            cout << "\nAccount Not Found!" << endl;
-        }
+        cout << "\nAccount Report Exported Successfully!" << endl;
     }
 };
 
@@ -376,11 +386,11 @@ int main()
 
         cout << "1. Create Account" << endl;
         cout << "2. Display All Accounts" << endl;
-        cout << "3. Search Account" << endl;
-        cout << "4. Deposit Money" << endl;
-        cout << "5. Withdraw Money" << endl;
-        cout << "6. Update Account" << endl;
-        cout << "7. Delete Account" << endl;
+        cout << "3. Search By Account Number" << endl;
+        cout << "4. Search By Account Holder Name" << endl;
+        cout << "5. Deposit Money" << endl;
+        cout << "6. Withdraw Money" << endl;
+        cout << "7. Export Account Report" << endl;
         cout << "8. Exit" << endl;
 
         cout << "\nEnter Your Choice: ";
@@ -397,23 +407,23 @@ int main()
             break;
 
         case 3:
-            account.searchAccount();
+            account.searchByAccountNumber();
             break;
 
         case 4:
-            account.depositMoney();
+            account.searchByName();
             break;
 
         case 5:
-            account.withdrawMoney();
+            account.depositMoney();
             break;
 
         case 6:
-            account.updateAccount();
+            account.withdrawMoney();
             break;
 
         case 7:
-            account.deleteAccount();
+            account.exportAccountsReport();
             break;
 
         case 8:
